@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Color Palette Generator</title>
+
+  <!-- 🔒 Prevent dark-mode flicker BEFORE render -->
+  <script>
+    (function () {
+      try {
+        const theme = localStorage.getItem("ui-theme") || "light";
+        document.documentElement.setAttribute("data-theme", theme);
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- Base background safety (optional but good) -->
+  <style>
+    html {
+      background: #f4f6f8;
+    }
+    html[data-theme="dark"] {
+      background: #0f1115;
+    }
+  </style>
+
+  <!-- Main stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+
+<body class="theme-light">
+<div class="container">
+
+  <!-- TITLE + THEME TOGGLE -->
+  <div class="title-row">
+    <h1>AI Color Palette Generator</h1>
+
+    <!-- 🌗 Dark / Light Toggle (Uiverse) -->
+    <label class="switch" aria-label="Toggle dark mode">
+      <input
+  id="input"
+  type="checkbox"
+  onchange="toggleTheme()"
+/>
+      <div class="slider round">
+        <div class="sun-moon">
+          <svg id="moon-dot-1" class="moon-dot" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="moon-dot-2" class="moon-dot" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="moon-dot-3" class="moon-dot" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+
+          <svg id="light-ray-1" class="light-ray" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="light-ray-2" class="light-ray" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="light-ray-3" class="light-ray" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+
+          <svg id="cloud-1" class="cloud-dark" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="cloud-2" class="cloud-dark" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="cloud-3" class="cloud-dark" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="cloud-4" class="cloud-light" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="cloud-5" class="cloud-light" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="cloud-6" class="cloud-light" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+        </div>
+
+        <div class="stars">
+          <svg id="star-1" class="star" viewBox="0 0 20 20"><path d="M0 10 C10 10,10 10,0 10 Z"/></svg>
+          <svg id="star-2" class="star" viewBox="0 0 20 20"><path d="M0 10 C10 10,10 10,0 10 Z"/></svg>
+          <svg id="star-3" class="star" viewBox="0 0 20 20"><path d="M0 10 C10 10,10 10,0 10 Z"/></svg>
+          <svg id="star-4" class="star" viewBox="0 0 20 20"><path d="M0 10 C10 10,10 10,0 10 Z"/></svg>
+        </div>
+      </div>
+    </label>
+  </div>
+
+  <p class="subtitle">
+    Upload an image to generate an accessible, design-ready color system.
+  </p>
+
+  <!-- UPLOAD -->
+  <!-- ========== IMAGE UPLOAD (DRAG & DROP) ========== -->
+<form method="POST" enctype="multipart/form-data" class="upload-form">
+
+  <div class="upload-header">
+    <span>Upload Image</span>
+    <button type="button" class="reload-btn" onclick="resetUpload()">Reload</button>
+  </div>
+
+  <label for="imageInput" class="dropzone" id="dropzone">
+    <input type="file" name="image" id="imageInput" accept="image/*" hidden required>
+
+    <div class="drop-placeholder" id="dropPlaceholder">
+      <p><strong>Drag & drop an image here</strong></p>
+      <p>or click to browse</p>
+    </div>
+
+    <img id="imagePreview" class="image-preview" />
+  </label>
+
+  <button type="submit"
+        name="action"
+        value="generate"
+        class="generate-btn">
+  Generate Palette
+</button>
+
+</form>
+  {% if data %}
+  <form method="POST">
+
+    <!-- PALETTE -->
+    <section class="card">
+      <h2>Extracted Palette</h2>
+      <div class="palette">
+        {% for color in data.palette %}
+        <div class="swatch"
+             style="background: {{ color }}"
+             onclick="assignColor('{{ color }}')">
+          <span>{{ color }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    {% for color in data.palette %}
+      <input type="hidden" name="palette[]" value="{{ color }}">
+    {% endfor %}
+
+    <!-- COLOR ROLES -->
+    <section class="card">
+      <h2>Color Roles</h2>
+      <p class="subtitle">Click a role, then click a color</p>
+
+      <input type="hidden" id="activeRole" value="text">
+
+      <div class="roles-edit">
+        {% for role, current_color in data.roles.items() %}
+        <div class="role-card {% if role == 'text' %}active{% endif %}"
+             data-role="{{ role }}"
+             onclick="selectRole('{{ role }}')">
+          <strong>{{ role.capitalize() }}</strong>
+          <span class="role-preview" style="background: {{ current_color }}"></span>
+          <input type="hidden" name="{{ role }}" value="{{ current_color }}">
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <button type="submit" name="action" value="apply" class="apply-btn">
+      Apply Changes
+    </button>
+
+    <!-- ================= UI PREVIEW ================= -->
+<section class="card preview"
+  style="
+    --bg: {{ data.roles.background }};
+    --text: {{ data.roles.text }};
+    --primary: {{ data.roles.primary }};
+    --accent: {{ data.roles.accent }};
+  "
+>
+  <h2>UI Preview</h2>
+
+  <div class="preview-canvas">
+
+    <!-- BUTTONS -->
+    <div class="ui-group active"
+         data-component="button"
+         onclick="selectComponent('button')">
+      <h4>Buttons</h4>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn primary">Primary</button>
+        <button class="btn ghost">Ghost</button>
+      </div>
+    </div>
+
+    <!-- TAGS -->
+    <div class="ui-group"
+         data-component="tag"
+         onclick="selectComponent('tag')">
+      <h4>Tags</h4>
+      <span class="tag">Tag</span>
+      <span class="tag accent">Accent</span>
+    </div>
+
+    <!-- ALERTS -->
+    <div class="ui-group"
+         data-component="alert"
+         onclick="selectComponent('alert')">
+      <h4>Alerts</h4>
+      <div class="alert">Primary alert</div>
+      <div class="alert accent">Accent alert</div>
+    </div>
+
+    <!-- CARD LIST -->
+<div class="ui-group"
+     data-component="card"
+     onclick="selectComponent('card')">
+  <h4>Cards</h4>
+
+  <div class="card-list">
+
+    <a class="card-item">
+      <img src="https://picsum.photos/600/400?1" alt="Developer">
+      <span class="badge-role">Developer</span>
+      <h3>A developer codes software and websites.</h3>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="card-item">
+      <img src="https://picsum.photos/600/400?2" alt="Designer">
+      <span class="badge-role accent">Designer</span>
+      <h3>A designer is a visual problem solver.</h3>
+      <div class="arrow">→</div>
+    </a>
+
+    <a class="card-item">
+      <img src="https://picsum.photos/600/400?3" alt="Editor">
+      <span class="badge-role muted">Editor</span>
+      <h3>An editor ensures content quality.</h3>
+      <div class="arrow">→</div>
+    </a>
+
+  </div>
+</div>
+
+    <!-- 📅 CALENDAR -->
+    <div class="ui-group"
+         data-component="calendar"
+         onclick="selectComponent('calendar')">
+      <h4>Calendar</h4>
+
+      <div id="calendar" style="margin-top:10px;">
+        <div id="calendar_header">
+          <span>&lt;</span>
+          <h1>June 2025</h1>
+          <span>&gt;</span>
+        </div>
+
+        <div id="calendar_weekdays">
+          <div>Su</div><div>Mo</div><div>Tu</div>
+          <div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+        </div>
+
+        <div id="calendar_content">
+          <div class="blank"></div>
+          <div class="blank"></div>
+          <div>1</div><div>2</div><div>3</div>
+          <div>4</div><div>5</div><div>6</div>
+          <div class="today">7</div>
+          <div>8</div><div>9</div><div>10</div>
+          <div>11</div><div>12</div><div>13</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+
+    <!-- EXPORT -->
+    <section class="card" id="export-css">
+  <h2>Export CSS</h2>
+  <textarea id="cssOutput" rows="18" readonly style="width:100%"></textarea>
+</section>
+
+
+  </form>
+  {% endif %}
+</div>
+
+<!-- 🔒 SAFE TOKEN INJECTION -->
+<script>
+const TOKENS = {
+  bg: "{{ data.roles.background if data else '' }}",
+  text: "{{ data.roles.text if data else '' }}",
+  primary: "{{ data.roles.primary if data else '' }}",
+  accent: "{{ data.roles.accent if data else '' }}"
+};
+</script>
+
+<script>
+/* ================= ROLE + COMPONENT LOGIC ================= */
+let activeRole = "text";
+let activeComponent = "button";
+
+function selectRole(role) {
+  activeRole = role;
+  document.querySelectorAll(".role-card").forEach(c =>
+    c.classList.remove("active")
+  );
+  document.querySelector(`[data-role='${role}']`)?.classList.add("active");
+}
+
+function assignColor(color) {
+  const input = document.querySelector(`input[name='${activeRole}']`);
+  if (!input) return;
+
+  input.value = color;
+  const preview = document.querySelector(
+    `[data-role='${activeRole}'] .role-preview`
+  );
+  if (preview) preview.style.background = color;
+}
+
+function selectComponent(type) {
+  activeComponent = type;
+  generateCSS();
+
+  const exportSection = document.getElementById("export-css");
+  if (exportSection) {
+    exportSection.scrollIntoView({ behavior: "smooth" });
+    exportSection.classList.add("highlight");
+    setTimeout(() => exportSection.classList.remove("highlight"), 900);
+  }
+}
+
+/* ================= EXPORT CSS ================= */
+function generateCSS() {
+  let css = `
+:root {
+  --bg: ${TOKENS.bg};
+  --text: ${TOKENS.text};
+  --primary: ${TOKENS.primary};
+  --accent: ${TOKENS.accent};
+}
+`;
+
+  const blocks = {
+    button: `
+.btn {
+  padding:10px 14px;
+  border-radius:10px;
+  border:1px solid var(--primary);
+}
+.btn.primary {
+  background:var(--primary);
+  color:var(--bg);
+}
+`,
+    tag: `
+.tag {
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid var(--primary);
+}
+.tag.accent {
+  border-color:var(--accent);
+  color:var(--accent);
+}
+`,
+    alert: `
+.alert {
+  padding:12px;
+  border-radius:10px;
+  border:1px solid var(--primary);
+}
+.alert.accent {
+  border-color:var(--accent);
+}
+`,
+    card: `
+.card-item {
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+}
+`,
+    calendar: `
+.day {
+  width:36px;
+  height:36px;
+  border-radius:8px;
+  border:1px solid var(--primary);
+}
+.day.active {
+  background:var(--primary);
+  color:var(--bg);
+}
+`
+  };
+
+  css += blocks[activeComponent] || "";
+  document.getElementById("cssOutput").value = css.trim();
+}
+
+document.addEventListener("DOMContentLoaded", generateCSS);
+</script>
+
+<script>
+/* ================= THEME SYSTEM (Uiverse FIXED) ================= */
+const THEME_KEY = "ui-theme";
+
+/* Apply theme to BOTH html + body */
+function applyTheme(theme) {
+  const html = document.documentElement;
+  const body = document.body;
+  const toggle = document.getElementById("input");
+
+  html.setAttribute("data-theme", theme);
+
+  body.classList.remove("theme-light", "theme-dark");
+  body.classList.add(`theme-${theme}`);
+
+  if (toggle) toggle.checked = theme === "dark";
+
+  localStorage.setItem(THEME_KEY, theme);
+}
+
+/* Restore theme BEFORE paint */
+(function () {
+  const saved = localStorage.getItem(THEME_KEY) || "light";
+  document.documentElement.setAttribute("data-theme", saved);
+
+  document.addEventListener("DOMContentLoaded", () => {
+    applyTheme(saved);
+  });
+})();
+
+/* Called by Uiverse checkbox */
+function toggleTheme() {
+  const toggle = document.getElementById("input");
+  if (!toggle) return;
+
+  const nextTheme = toggle.checked ? "dark" : "light";
+  applyTheme(nextTheme);
+}
+</script>
+
+<script>
+/* ================= DRAG & DROP (PERSISTENT PREVIEW) ================= */
+const dropzone = document.getElementById("dropzone");
+const input = document.getElementById("imageInput");
+const preview = document.getElementById("imagePreview");
+const placeholder = document.getElementById("dropPlaceholder");
+
+/* Restore preview */
+(function restorePreview() {
+  const saved = sessionStorage.getItem("previewImage");
+  if (saved && preview) {
+    preview.src = saved;
+    preview.style.display = "block";
+    placeholder.style.display = "none";
+  }
+})();
+
+/* Drag events */
+["dragenter", "dragover"].forEach(evt => {
+  dropzone?.addEventListener(evt, e => {
+    e.preventDefault();
+    dropzone.classList.add("dragover");
+  });
+});
+
+["dragleave", "drop"].forEach(evt => {
+  dropzone?.addEventListener(evt, e => {
+    e.preventDefault();
+    dropzone.classList.remove("dragover");
+  });
+});
+
+/* Drop handler */
+dropzone?.addEventListener("drop", e => {
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+});
+
+/* File input */
+input?.addEventListener("change", () => {
+  if (input.files[0]) handleFile(input.files[0]);
+});
+
+function handleFile(file) {
+  if (!file.type.startsWith("image/")) return;
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    preview.src = e.target.result;
+    preview.style.display = "block";
+    placeholder.style.display = "none";
+    sessionStorage.setItem("previewImage", e.target.result);
+  };
+  reader.readAsDataURL(file);
+
+  const dt = new DataTransfer();
+  dt.items.add(file);
+  input.files = dt.files;
+}
+
+/* Reload button */
+function resetUpload() {
+  input.value = "";
+  preview.src = "";
+  preview.style.display = "none";
+  placeholder.style.display = "block";
+  sessionStorage.removeItem("previewImage");
+}
+</script>
+
+
+
+</body>
+</html>
