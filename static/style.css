@@ -465,6 +465,29 @@ html[data-theme="dark"] .role-preview {
   border-radius: 10px;
   object-fit: cover;
 }
+/* ===== Mobile Optimisation ===== */
+@media (max-width: 720px){
+
+  .card-list{
+    grid-template-columns: 1fr;   /* one card per row */
+    gap: 16px;
+  }
+
+  .card-item{
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .card-item img{
+    border-radius: 10px;
+    aspect-ratio: 16 / 10;        /* slightly taller → better visibility */
+  }
+
+  .card-item h3{
+    font-size: 15px;
+    line-height: 1.35;
+  }
+}
 
 /* ================= BADGES ================= */
 .badge-role {
