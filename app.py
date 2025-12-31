@@ -1,5 +1,12 @@
 from flask import Flask, render_template, request, session, redirect, url_for
 import os
+import smtplib
+from email.mime.text import MIMEText
+from dotenv import load_dotenv
+from flask import jsonify
+
+
+load_dotenv()
 
 from palette_logic import (
     extract_palette,
@@ -32,9 +39,6 @@ TOKENS_FILE = os.path.join(STATIC_FOLDER, "tokens.css")
 # HELPER: WRITE TOKENS
 # =====================
 def write_tokens_css(roles: dict):
-    """
-    Writes CSS variables to static/tokens.css
-    """
     with open(TOKENS_FILE, "w") as f:
         f.write(f"""
 :root {{
@@ -68,17 +72,13 @@ def index():
                 rgb_colors, hex_colors = extract_palette(image_path, n_colors=6)
                 roles_rgb = assign_color_roles(rgb_colors)
 
-                roles = {
-                    role: rgb_to_hex(rgb)
-                    for role, rgb in roles_rgb.items()
-                }
+                roles = {role: rgb_to_hex(rgb) for role, rgb in roles_rgb.items()}
 
                 ratio, level = wcag_result(
                     roles_rgb["text"],
                     roles_rgb["background"]
                 )
 
-                # ✅ WRITE DESIGN TOKENS
                 write_tokens_css(roles)
 
                 session["data"] = {
@@ -89,9 +89,11 @@ def index():
                 }
 
         # =====================
-        # APPLY ROLE CHANGES
+        # APPLY ROLE CHANGES + SAVE USER CODE
         # =====================
         elif action == "apply":
+
+            # ---------- PALETTE ----------
             hex_colors = request.form.getlist("palette[]")
 
             rgb_colors = [
@@ -108,17 +110,13 @@ def index():
                         int(hex_val[i:i+2], 16) for i in (1, 3, 5)
                     )
 
-            roles = {
-                role: rgb_to_hex(rgb)
-                for role, rgb in roles_rgb.items()
-            }
+            roles = {role: rgb_to_hex(rgb) for role, rgb in roles_rgb.items()}
 
             ratio, level = wcag_result(
                 roles_rgb["text"],
                 roles_rgb["background"]
             )
 
-            # ✅ UPDATE DESIGN TOKENS
             write_tokens_css(roles)
 
             session["data"] = {
@@ -128,14 +126,28 @@ def index():
                 "contrast_level": level
             }
 
-        # 🔴 POST → REDIRECT → GET (CRITICAL)
+            # ---------- USER HTML + CSS ----------
+            user_html = request.form.get("user_html", "")
+            user_css = request.form.get("user_css", "")
+
+            session["user_code"] = {
+                "html": user_html,
+                "css": user_css
+            }
+
         return redirect(url_for("index"))
 
     # =====================
     # HANDLE GET
     # =====================
     data = session.get("data")
-    return render_template("index.html", data=data)
+    user_code = session.get("user_code", {"html": "", "css": ""})
+
+    return render_template(
+        "index.html",
+        data=data,
+        user_code=user_code
+    )
 
 
 # =====================
@@ -143,20 +155,79 @@ def index():
 # =====================
 @app.route("/ui-preview")
 def ui_preview():
-    """
-    Dedicated UI preview page.
-    Uses tokens.css automatically.
-    """
+
     data = session.get("data")
-    if not data:
+    user_code = session.get("user_code")
+
+    if not data or not user_code:
         return redirect(url_for("index"))
 
-    return render_template("ui-preview.html", data=data)
+    return render_template(
+        "ui-preview.html",
+        data=data,
+        user_code=user_code
+    )
+
+# =====================
+# SEND EMAIL
+# =====================
+def send_contact_email(name, email, message):
+    user = os.getenv("EMAIL_USER")
+    password = os.getenv("EMAIL_PASS")
+    to_email = os.getenv("TO_EMAIL")
+
+    subject = "New message from SPECTRUM Contact Form"
+
+    body = f"""New message received:
+
+Name: {name}
+Email: {email}
+
+Message:
+{message}
+"""
+
+    msg = MIMEText(body, "plain", "utf-8")
+    msg["Subject"] = subject
+    msg["From"] = user
+    msg["To"] = to_email
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(user, password)
+            server.sendmail(user, to_email, msg.as_string())
+
+        print("Email sent successfully")
+        return True
+
+    except Exception as e:
+        print("Email error:", e)
+        return False
+
+
 
 
 # =====================
-# RUN APP
+# CONTACT API
+# =====================
+@app.route("/contact", methods=["POST"])
+def contact():
+
+    name = request.form.get("name", "").strip()
+    email = request.form.get("email", "").strip()
+    message = request.form.get("message", "").strip()
+
+    if not name or not email or not message:
+        return jsonify({"ok": False, "error": "Missing fields"}), 400
+
+    if send_contact_email(name, email, message):
+        return jsonify({"ok": True})
+
+    return jsonify({"ok": False, "error": "Email failed"}), 500
+
+
+# =====================
+# RUN
 # =====================
 if __name__ == "__main__":
-    # 🔴 Disable reloader (prevents session wipe)
     app.run(debug=True, use_reloader=False)

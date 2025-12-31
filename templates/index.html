@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Color Palette Generator</title>
+  <title>Spectrum Labs</title>
 
   <!-- 🔒 Prevent dark-mode flicker BEFORE render -->
   <script>
@@ -27,16 +27,40 @@
 
   <!-- Main stylesheet -->
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
 </head>
 
 
 <body class="theme-light">
+<div id="loader">
+  <div class="loader-card">
+    <div class="logo">
+  <img src="/static/logo-light.png" class="logo-light" alt="Spectrum Labs logo light">
+  <img src="/static/logo-dark.png" class="logo-dark" alt="Spectrum Labs logo dark">
+</div>
+    <div class="loader-bar">
+      <div class="loader-fill"></div>
+    </div>
+  </div>
+</div>
+
 <div class="container">
 
   <!-- TITLE + THEME TOGGLE -->
-  <div class="title-row">
-    <h1>AI Color Palette Generator</h1>
+<div class="title-row">
+   <section class="card app-header" id="top">
+  <div class="header-left">
+    <h1 class="logo">Spectrum Labs</h1>
+    <p class="tagline">AI-powered accessible color palette generator</p>
+  </div>
 
+  <nav class="header-nav">
+    <a href="#" onclick="scrollToSection('upload'); return false;">Generate</a>
+  <a href="#" onclick="scrollToSection('about'); return false;">About</a>
+  <a href="#" onclick="scrollToSection('faq'); return false;">FAQ</a>
+  <a href="#" onclick="scrollToSection('contact'); return false;">Contact</a>
+  </nav>
+  
     <!-- 🌗 Dark / Light Toggle (Uiverse) -->
     <label class="switch" aria-label="Toggle dark mode">
       <input
@@ -71,13 +95,14 @@
       </div>
     </label>
   </div>
-
+</section>
   <p class="subtitle">
     Upload an image to generate an accessible, design-ready color system.
   </p>
 
   <!-- UPLOAD -->
   <!-- ========== IMAGE UPLOAD (DRAG & DROP) ========== -->
+<section id="upload" class="card">
 <form method="POST" enctype="multipart/form-data" class="upload-form">
 
   <div class="upload-header">
@@ -104,22 +129,146 @@
 </button>
 
 </form>
+</section>
+<!-- ================= INFO BLOCK ================= -->
+<div id="infoBlock">
+
+  <!-- ABOUT -->
+  <section class="card about" id="about" >
+    <h2>About</h2>
+    
+
+  <p>
+    <strong>Spectrum Labs</strong> is an AI-powered color palette generator built
+    for designers, creators, and developers.
+  </p>
+
+  <p>
+    Upload any image and Spectrum Labs intelligently extracts
+    balanced, accessible color systems you can instantly use in your projects.
+  </p>
+
+  <ul class="about-list">
+    <li>Generates harmonious color palettes</li>
+    <li>Optimizes contrast for accessibility</li>
+    <li>Saves hours of manual color picking</li>
+    <li>Exports palettes as PNG or CSS tokens</li>
+    <li>Runs locally - your images never leave your browser</li>
+  </ul>
+
+  <p>
+    Whether you're designing a brand, UI system, or creative artwork —
+    Spectrum Labs makes color simple.
+  </p>
+  </section>
+
+  <!-- FAQ -->
+  <section class="card faq" id="faq">
+  <h2>FAQ</h2>
+
+  <details class="faq-item" open>
+    <summary>How are colors generated?</summary>
+    <p>We extract dominant colors from your image and balance them for accessibility and visual harmony.</p>
+  </details>
+
+  <details class="faq-item">
+    <summary>Is my image stored anywhere?</summary>
+    <p>No. Everything runs locally in your browser. Your images are never uploaded or saved.</p>
+  </details>
+
+  <details class="faq-item">
+    <summary>Can I download my palette?</summary>
+    <p>Yes you can export palettes as PNG or CSS tokens.</p>
+  </details>
+
+  <details class="faq-item">
+    <summary>Does Spectrum Labs work offline?</summary>
+    <p>Yes. Once the page loads, palette generation runs in your browser engine, no internet required.</p>
+  </details>
+
+  <details class="faq-item">
+    <summary>Will my colors meet accessibility guidelines?</summary>
+    <p>Spectrum Labs helps optimize contrast, but final accessibility depends on how you apply colors. We recommend testing with WCAG tools for UI text.</p>
+  </details>
+
+  <details class="faq-item">
+    <summary>Can I use Spectrum Labs for commercial projects?</summary>
+    <p>Yes you’re free to use your generated palettes in personal or commercial work.</p>
+  </details>
+
+  <details class="faq-item">
+    <summary>What image types are supported?</summary>
+    <p>PNG, JPG, and WebP files are supported.</p>
+  </details>
+
+  <details class="faq-item">
+    <summary>Who is Spectrum Labs built for?</summary>
+    <p>Designers, developers, creators, and anyone who works with color.</p>
+  </details>
+
+</section>
+
+  <!-- CONTACT -->
+  <section class="card contact" onsubmit="event.preventDefault(); handleContactForm();" id="contact">
+  <h2>Contact</h2>
+
+  <form method="POST" action="/contact" class="contact-form">
+
+    <div class="field">
+      <label>Name</label>
+      <input type="text" name="name" required>
+    </div>
+
+    <div class="field">
+      <label>Email</label>
+      <input type="email" name="email" required>
+    </div>
+
+    <div class="field">
+      <label>Message</label>
+      <textarea name="message" rows="4" required></textarea>
+    </div>
+
+    <button class="generate-btn" type="submit">
+      Send Message
+    </button>
+
+  </form>
+</section>
+
+
+</div>
+
   {% if data %}
   <form method="POST">
+    
+
 
     <!-- PALETTE -->
-    <section class="card">
-      <h2>Extracted Palette</h2>
-      <div class="palette">
-        {% for color in data.palette %}
-        <div class="swatch"
-             style="background: {{ color }}"
-             onclick="assignColor('{{ color }}')">
-          <span>{{ color }}</span>
-        </div>
-        {% endfor %}
-      </div>
-    </section>
+<section class="card">
+
+  <div class="palette-header" >
+    <h2>Extracted Palette</h2>
+
+    <div class="palette-actions">
+      <button id="copyPaletteBtn" class="copy-btn">Copy Palette</button>
+      <button id="downloadPaletteBtn" class="copy-btn">Download PNG</button>
+    </div>
+  </div>
+
+  <div class="palette" id="paletteList">
+    {% for color in data.palette %}
+    <div class="swatch"
+         style="background: {{ color }}"
+         data-color="{{ color }}"
+         onclick="assignColor('{{ color }}')">
+      <span>{{ color }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+</section>
+
 
     {% for color in data.palette %}
       <input type="hidden" name="palette[]" value="{{ color }}">
@@ -145,12 +294,12 @@
       </div>
     </section>
 
-    <button type="submit" name="action" value="apply" class="apply-btn">
+    <button type="submit" name="action" value="apply" class="generate-btn">
       Apply Changes
     </button>
 
     <!-- ================= UI PREVIEW ================= -->
-<section class="card preview"
+<section id="preview" class="card preview"
   style="
     --bg: {{ data.roles.background }};
     --text: {{ data.roles.text }};
@@ -158,7 +307,15 @@
     --accent: {{ data.roles.accent }};
   "
 >
-  <h2>UI Preview</h2>
+
+  <!-- HEADER ROW -->
+  <div class="preview-header">
+    <h2>UI Preview</h2>
+
+    <button id="downloadPreviewBtn" class="copy-btn">
+      Download Preview
+    </button>
+  </div>
 
   <div class="preview-canvas">
 
@@ -200,21 +357,22 @@
   <div class="card-list">
 
     <a class="card-item">
-      <img src="https://picsum.photos/600/400?1" alt="Developer">
+      <img src="https://picsum.photos/600/400?1" crossorigin="anonymous">
       <span class="badge-role">Developer</span>
       <h3>A developer codes software and websites.</h3>
       <div class="arrow">→</div>
     </a>
 
     <a class="card-item">
-      <img src="https://picsum.photos/600/400?2" alt="Designer">
+      <img src="https://picsum.photos/600/400?1" crossorigin="anonymous">
       <span class="badge-role accent">Designer</span>
       <h3>A designer is a visual problem solver.</h3>
       <div class="arrow">→</div>
     </a>
 
     <a class="card-item">
-      <img src="https://picsum.photos/600/400?3" alt="Editor">
+      <img src="https://picsum.photos/600/400?1" crossorigin="anonymous">
+
       <span class="badge-role muted">Editor</span>
       <h3>An editor ensures content quality.</h3>
       <div class="arrow">→</div>
@@ -228,7 +386,7 @@
          data-component="calendar"
          onclick="selectComponent('calendar')">
       <h4>Calendar</h4>
-
+    
       <div id="calendar" style="margin-top:10px;">
         <div id="calendar_header">
           <span>&lt;</span>
@@ -260,14 +418,26 @@
 
     <!-- EXPORT -->
     <section class="card" id="export-css">
-  <h2>Export CSS</h2>
+   <div class="header-row">
+    <h2>Export CSS</h2>
+
+    <button id="copyCssBtn" class="copy-btn">
+      Copy CSS
+    </button>
+  </div>
   <textarea id="cssOutput" rows="18" readonly style="width:100%"></textarea>
 </section>
 
 
   </form>
   {% endif %}
+  <div id="infoPlaceholder"></div>
 </div>
+<div id="toast" class="toast"></div>
+<footer class="site-footer">
+  © 2025 NRMATA // Systems — All Rights Reserved
+</footer>
+
 
 <!-- 🔒 SAFE TOKEN INJECTION -->
 <script>
@@ -297,6 +467,7 @@ function assignColor(color) {
   if (!input) return;
 
   input.value = color;
+
   const preview = document.querySelector(
     `[data-role='${activeRole}'] .role-preview`
   );
@@ -392,14 +563,12 @@ document.addEventListener("DOMContentLoaded", generateCSS);
 /* ================= THEME SYSTEM (Uiverse FIXED) ================= */
 const THEME_KEY = "ui-theme";
 
-/* Apply theme to BOTH html + body */
 function applyTheme(theme) {
   const html = document.documentElement;
   const body = document.body;
   const toggle = document.getElementById("input");
 
   html.setAttribute("data-theme", theme);
-
   body.classList.remove("theme-light", "theme-dark");
   body.classList.add(`theme-${theme}`);
 
@@ -408,7 +577,6 @@ function applyTheme(theme) {
   localStorage.setItem(THEME_KEY, theme);
 }
 
-/* Restore theme BEFORE paint */
 (function () {
   const saved = localStorage.getItem(THEME_KEY) || "light";
   document.documentElement.setAttribute("data-theme", saved);
@@ -418,7 +586,6 @@ function applyTheme(theme) {
   });
 })();
 
-/* Called by Uiverse checkbox */
 function toggleTheme() {
   const toggle = document.getElementById("input");
   if (!toggle) return;
@@ -435,7 +602,6 @@ const input = document.getElementById("imageInput");
 const preview = document.getElementById("imagePreview");
 const placeholder = document.getElementById("dropPlaceholder");
 
-/* Restore preview */
 (function restorePreview() {
   const saved = sessionStorage.getItem("previewImage");
   if (saved && preview) {
@@ -445,7 +611,6 @@ const placeholder = document.getElementById("dropPlaceholder");
   }
 })();
 
-/* Drag events */
 ["dragenter", "dragover"].forEach(evt => {
   dropzone?.addEventListener(evt, e => {
     e.preventDefault();
@@ -460,13 +625,11 @@ const placeholder = document.getElementById("dropPlaceholder");
   });
 });
 
-/* Drop handler */
 dropzone?.addEventListener("drop", e => {
   const file = e.dataTransfer.files[0];
   if (file) handleFile(file);
 });
 
-/* File input */
 input?.addEventListener("change", () => {
   if (input.files[0]) handleFile(input.files[0]);
 });
@@ -479,6 +642,7 @@ function handleFile(file) {
     preview.src = e.target.result;
     preview.style.display = "block";
     placeholder.style.display = "none";
+
     sessionStorage.setItem("previewImage", e.target.result);
   };
   reader.readAsDataURL(file);
@@ -488,7 +652,6 @@ function handleFile(file) {
   input.files = dt.files;
 }
 
-/* Reload button */
 function resetUpload() {
   input.value = "";
   preview.src = "";
@@ -496,6 +659,399 @@ function resetUpload() {
   placeholder.style.display = "block";
   sessionStorage.removeItem("previewImage");
 }
+</script>
+
+<script>
+/* ================= COPY PALETTE + DOWNLOAD PNG ================= */
+
+let copyTimer = null;
+
+function copyPalette() {
+  const btn = document.getElementById("copyPaletteBtn");
+  const swatches = document.querySelectorAll("#paletteList .swatch");
+  const colors = [...swatches].map(s => s.dataset.color || s.style.background);
+
+  if (!colors.length || !btn) return;
+
+  navigator.clipboard?.writeText(colors.join(", "));
+
+  const original = "Copy Palette";
+  btn.textContent = "Copied!";
+  btn.disabled = true;
+  btn.style.opacity = 0.8;
+
+  clearTimeout(copyTimer);
+  copyTimer = setTimeout(() => {
+    btn.textContent = original;
+    btn.disabled = false;
+    btn.style.opacity = 1;
+  }, 1400);
+
+  showToast("Palette copied");
+}
+
+
+/* ================= DOWNLOAD PALETTE PNG ================= */
+
+function downloadPalettePNG() {
+  const swatches = document.querySelectorAll("#paletteList .swatch");
+  if (!swatches.length) return;
+
+  const colors = [...swatches].map(s => s.dataset.color || s.style.background);
+
+  const width = 1000;
+  const height = 220;
+  const swatchWidth = width / colors.length;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+
+  ctx.fillStyle = dark ? "#0f1115" : "#ffffff";
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.fillStyle = dark ? "#ffffff" : "#111111";
+  ctx.font = "18px Inter, Arial";
+  ctx.textAlign = "left";
+  ctx.fillText("Extracted Palette", 24, 36);
+
+  colors.forEach((color, i) => {
+    const x = i * swatchWidth;
+
+    ctx.fillStyle = color;
+    ctx.fillRect(x, 60, swatchWidth, 110);
+
+    ctx.fillStyle = dark ? "#ffffff" : "#111111";
+    ctx.font = "14px Inter, Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(color, x + swatchWidth / 2, 190);
+  });
+
+  const link = document.createElement("a");
+  link.download = "palette.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+
+  showToast("PNG downloaded");
+}
+
+
+/* ================= TOAST ================= */
+
+function showToast(msg) {
+  let t = document.getElementById("toast");
+  if (!t) {
+    t = document.createElement("div");
+    t.id = "toast";
+    t.className = "toast";
+    document.body.appendChild(t);
+  }
+
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 1400);
+}
+
+
+/* ================= WIRE BUTTONS ================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  document
+    .getElementById("copyPaletteBtn")
+    ?.addEventListener("click", copyPalette);
+
+  document
+    .getElementById("downloadPaletteBtn")
+    ?.addEventListener("click", downloadPalettePNG);
+
+});
+</script>
+<!-- html2canvas -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  const btn = document.getElementById("downloadPreviewBtn");
+
+  btn?.addEventListener("click", async e => {
+    e.preventDefault();
+
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Generating...";
+
+    // 🎯 Find preview
+    const preview =
+      btn.closest(".card.preview") ||
+      document.querySelector(".preview-canvas");
+
+    if (!preview) {
+      alert("Preview UI not found");
+      btn.disabled = false;
+      btn.textContent = original;
+      return;
+    }
+
+    /* ==========================================
+       1️⃣  CLONE PREVIEW (OFF-SCREEN)
+    ========================================== */
+    const clone = preview.cloneNode(true);
+    clone.style.position = "fixed";
+    clone.style.left = "-9999px";
+    clone.style.top = "0";
+    clone.style.pointerEvents = "none";
+    clone.style.transform = "scale(1)";
+    document.body.appendChild(clone);
+
+    /* ==========================================
+       2️⃣  SANITIZE ONLY UNSUPPORTED COLORS
+    ========================================== */
+    clone.querySelectorAll("*").forEach(el => {
+      const cs = getComputedStyle(el);
+
+      for (const prop of [
+        "color",
+        "backgroundColor",
+        "borderColor",
+        "outlineColor",
+        "boxShadow"
+      ]) {
+        const val = cs[prop];
+        if (val && val.includes("color(")) {
+          el.style[prop] = "rgba(0,0,0,0)"; // 🔥 transparent fallback
+        }
+      }
+    });
+
+    // hide images only in clone
+    clone.querySelectorAll("img").forEach(i =>
+      i.setAttribute("crossorigin", "anonymous")
+    );
+
+    try {
+      const canvas = await html2canvas(clone, {
+        useCORS: true,
+        scale: 2,
+        backgroundColor: null
+      });
+
+      const link = document.createElement("a");
+      link.download = "ui-preview.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+
+    } catch (err) {
+      console.error("Preview PNG error →", err);
+      alert("Could not capture preview — see console");
+    }
+
+    /* ==========================================
+       3️⃣  CLEAN UP
+    ========================================== */
+    clone.remove();
+    btn.disabled = false;
+    btn.textContent = original;
+  });
+
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  const preview = document.getElementById("preview");
+
+  // Check if Apply was clicked previously
+  const applied = sessionStorage.getItem("scrollToPreview");
+
+  if (applied && preview) {
+
+    preview.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+
+    // remove the flag
+    sessionStorage.removeItem("scrollToPreview");
+
+    // optional highlight
+    preview.classList.add("focus-pulse");
+    setTimeout(()=>preview.classList.remove("focus-pulse"), 900);
+  }
+
+  // store flag when button clicked
+  document
+    .querySelector("button[name='action'][value='apply']")
+    ?.addEventListener("click", () => {
+      sessionStorage.setItem("scrollToPreview", "1");
+    });
+
+});
+</script>
+<script>
+function copyCSS() {
+  const btn = document.getElementById("copyCssBtn");
+  const css = document.getElementById("cssOutput")?.value;
+
+  if (!btn || !css) return;
+
+  navigator.clipboard?.writeText(css);
+
+  const original = "Copy CSS";
+  btn.textContent = "Copied!";
+  btn.disabled = true;
+  btn.style.opacity = 0.8;
+
+  setTimeout(() => {
+    btn.textContent = original;
+    btn.disabled = false;
+    btn.style.opacity = 1;
+  }, 1400);
+
+  // optional toast (works with your existing one)
+  if (typeof showToast === "function") {
+    showToast("CSS copied");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document
+    .getElementById("copyCssBtn")
+    ?.addEventListener("click", copyCSS);
+});
+</script>
+<script>
+function showEngine(){
+  const el = document.getElementById("paletteEngine");
+  if(!el) return;
+
+  el.style.display = "block";
+
+  // smooth scroll to palette area
+  el.scrollIntoView({ behavior: "smooth" });
+}
+</script>
+<script>
+function handleContactForm(){
+  showToast("Message sent ✨");
+}
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  const infoBlock = document.getElementById("infoBlock");
+  const placeholder = document.getElementById("infoPlaceholder");
+
+  // Detect if palette exists (Flask / Jinja)
+  const paletteExists = {{ 'true' if data else 'false' }};
+
+  if (paletteExists) {
+    placeholder.appendChild(infoBlock);  // move section DOWN
+  }
+
+});
+</script>
+<script>
+function showToast(message, type="success"){
+  const toast = document.getElementById("toast");
+
+  toast.textContent = message;
+  toast.className = "toast " + type;
+
+  setTimeout(()=> toast.classList.add("show"), 10);
+
+  setTimeout(()=>{
+    toast.classList.remove("show");
+  }, 2500);
+}
+
+async function handleContactForm(){
+
+  const btn = document.querySelector(".contact-form button");
+  const form = document.querySelector(".contact-form");
+
+  btn.disabled = true;
+  btn.textContent = "Sending...";
+
+  const formData = new FormData(form);
+
+  try {
+    const res = await fetch("/contact", {
+      method: "POST",
+      body: formData
+    });
+
+    if(res.ok){
+      showToast("Message sent successfully", "success");
+      form.reset();
+    } else {
+      showToast("Failed to send message.", "error");
+    }
+
+  } catch(e){
+    showToast("Network error — try again.", "error");
+  }
+
+  btn.disabled = false;
+  btn.textContent = "Send Message";
+}
+</script>
+<script>
+function scrollToSection(id){
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  el.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+
+  // remove hash from URL
+  history.replaceState(null, "", window.location.pathname);
+}
+</script>
+<script>
+// Hide loader after page finishes loading
+function fadeOutLoader(){
+  const loader = document.getElementById("loader");
+  if(!loader) return;
+
+  loader.style.opacity = "0";
+  setTimeout(()=> loader.remove(), 400);
+}
+
+document.addEventListener("DOMContentLoaded", ()=>{
+
+  // Was this navigation triggered by form submit?
+  const skip = sessionStorage.getItem("skipLoader");
+
+  const loader = document.getElementById("loader");
+
+  if (skip) {
+    // skip loader instantly
+    loader.style.display = "none";
+
+    // clear flag so next reload shows loader
+    sessionStorage.removeItem("skipLoader");
+  }
+
+  else {
+    // normal load — show loader then fade out
+    window.addEventListener("load", fadeOutLoader);
+  }
+
+  // Mark form submits so loader won't show
+  document.querySelectorAll("form").forEach(form=>{
+    form.addEventListener("submit", ()=>{
+      sessionStorage.setItem("skipLoader","1");
+    });
+  });
+
+});
 </script>
 
 
