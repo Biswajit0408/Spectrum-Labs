@@ -1385,6 +1385,8 @@ html {
   align-items:center;
   gap:32px;              /* was smaller — now roomier */
   font-weight:600;
+  flex-wrap: wrap;          /* 🔥 KEY FIX */
+  row-gap: 10px;
 }
 
 .header-nav a{
@@ -1455,12 +1457,14 @@ html {
 .logo{
   margin:0;
   font-size:28px;
+  font-size: clamp(20px, 4vw, 28px);
 }
 
 .tagline{
   opacity:.8;
   font-size:13px;
   margin:0;
+  font-size: clamp(12px, 2.5vw, 13px);
 }
 #loader{
   position:fixed;
@@ -1529,4 +1533,21 @@ html {
 /* subtle hover vibe */
 .site-footer:hover{
   opacity: 1;
+}
+@media (max-width: 720px){
+
+  .app-header{
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .header-nav{
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .header-nav a{
+    padding: 8px 12px;
+  }
 }
